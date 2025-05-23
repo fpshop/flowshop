@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flowshop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #000; color: #fff; }
+    header { background: #111; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(255,255,255,0.1); }
+    .logo svg { height: 40px; }
+    nav a { margin-left: 1.5rem; text-decoration: none; color: #fff; font-weight: 600; }
+    .hero { padding: 4rem 2rem; text-align: center; background: #1a1a1a; }
+    .hero h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    .hero p { font-size: 1.2rem; }
+    .products { padding: 3rem 2rem; }
+    .category { margin-bottom: 2rem; }
+    .category h2 { margin-bottom: 1rem; font-size: 1.5rem; color: #ff4444; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+    .product { background: #222; padding: 0.5rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: space-between; height: 100%; position: relative; }
+    .product img { width: 100%; height: 130px; object-fit: cover; border-radius: 10px; }
+    .product h3 { font-size: 1rem; margin: 0.5rem 0 0.25rem 0; text-align: left; }
+    .product p { font-size: 0.95rem; text-align: right; margin: 0 0 0.5rem 0; }
+    .product button { margin-top: auto; padding: 0.4rem 0.8rem; background: #ff4444; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+    .cart { position: fixed; right: 0; top: 0; width: 300px; height: 100vh; background: #111; box-shadow: -2px 0 6px rgba(255,255,255,0.1); transform: translateX(100%); transition: transform 0.3s ease; padding: 1rem; overflow-y: auto; z-index: 1000; color: #fff; }
+    .cart.open { transform: translateX(0); }
+    .cart h2 { margin-bottom: 1rem; }
+    .cart-item { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+    .footer { padding: 2rem; text-align: center; background: #111; color: #fff; margin-top: 4rem; }
+    .cart-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #fff; }
+    #paypal-button-container { margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,10 90,85 10,85" fill="red" />
+        <text x="50" y="60" text-anchor="middle" fill="grey" font-size="30" font-weight="bold">FP</text>
+      </svg>
+    </div>
+    <nav>
+      <a href="#products">Produits</a>
+      <a href="#contact">Contact</a>
+      <button class="cart-toggle" onclick="toggleCart()">🛒</button>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>Bienvenue chez Flowshop</h1>
+    <p>Votre boutique moderne pour un peu de tout, au bon prix.</p>
+  </section>
+
+  <section class="products" id="products">
+    <div class="category">
+      <h2>Maison</h2>
+      <div class="grid">
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Maison">
+          <h3>Lampe Design</h3>
+          <p>29,99 €</p>
+          <button onclick="addToCart('Lampe Design', 29.99)">Ajouter</button>
+        </div>
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Maison">
+          <h3>Plante déco</h3>
+          <p>15,00 €</p>
+          <button onclick="addToCart('Plante déco', 15.00)">Ajouter</button>
+        </div>
+      </div>
+    </div>
+    <div class="category">
+      <h2>Tech</h2>
+      <div class="grid">
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Tech">
+          <h3>Casque Bluetooth</h3>
+          <p>59,99 €</p>
+          <button onclick="addToCart('Casque Bluetooth', 59.99)">Ajouter</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cart" id="cart">
+    <h2>Votre Panier</h2>
+    <div id="cart-items"></div>
+    <p><strong>Total : <span id="cart-total">0.00 €</span></strong></p>
+    <div id="paypal-button-container"></div>
+  </div>
+
+  <footer class="footer" id="contact">
+    <p>Flowshop © 2025 – Tous droits réservés</p>
+    <p>Contact : contact@flowshop.fr</p>
+  </footer>
+
+  <script>
+    const cart = [];
+    function toggleCart() {
+      document.getElementById('cart').classList.toggle('open');
+    }
+    function addToCart(name, price) {
+      cart.push({ name, price });
+      renderCart();
+    }
+    function renderCart() {
+      const container = document.getElementById('cart-items');
+      const total = document.getElementById('cart-total');
+      container.innerHTML = '';
+      let sum = 0;
+      cart.forEach(item => {
+        sum += item.price;
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `<span>${item.name}</span><span>${item.price.toFixed(2)} €</span>`;
+        container.appendChild(div);
+      });
+      total.textContent = sum.toFixed(2) + ' €';
+    }
+    function renderPayPalButton() {
+      if (typeof paypal !== 'undefined') {
+        paypal.Buttons({
+          createOrder: function(data, actions) {
+            let total = cart.reduce((acc, item) => acc + item.price, 0);
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  value: total.toFixed(2),
+                  currency_code: 'EUR'
+                }
+              }]
+            });
+          },
+          onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+              alert('Paiement effectué par ' + details.payer.name.given_name);
+              cart.length = 0;
+              renderCart();
+            });
+          }
+        }).render('#paypal-button-container');
+      }
+    }
+  </script>
+
+  <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=EUR" onload="renderPayPalButton()"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flowshop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #000; color: #fff; }
+    header { background: #111; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(255,255,255,0.1); }
+    .logo svg { height: 40px; }
+    nav a { margin-left: 1.5rem; text-decoration: none; color: #fff; font-weight: 600; }
+    .hero { padding: 4rem 2rem; text-align: center; background: #1a1a1a; }
+    .hero h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    .hero p { font-size: 1.2rem; }
+    .products { padding: 3rem 2rem; }
+    .category { margin-bottom: 2rem; }
+    .category h2 { margin-bottom: 1rem; font-size: 1.5rem; color: #ff4444; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+    .product { background: #222; padding: 0.5rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: space-between; height: 100%; position: relative; }
+    .product img { width: 100%; height: 130px; object-fit: cover; border-radius: 10px; }
+    .product h3 { font-size: 1rem; margin: 0.5rem 0 0.25rem 0; text-align: left; }
+    .product p { font-size: 0.95rem; text-align: right; margin: 0 0 0.5rem 0; }
+    .product button { margin-top: auto; padding: 0.4rem 0.8rem; background: #ff4444; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+    .cart { position: fixed; right: 0; top: 0; width: 300px; height: 100vh; background: #111; box-shadow: -2px 0 6px rgba(255,255,255,0.1); transform: translateX(100%); transition: transform 0.3s ease; padding: 1rem; overflow-y: auto; z-index: 1000; color: #fff; }
+    .cart.open { transform: translateX(0); }
+    .cart h2 { margin-bottom: 1rem; }
+    .cart-item { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+    .footer { padding: 2rem; text-align: center; background: #111; color: #fff; margin-top: 4rem; }
+    .cart-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #fff; }
+    #paypal-button-container { margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,10 90,85 10,85" fill="red" />
+        <text x="50" y="60" text-anchor="middle" fill="grey" font-size="30" font-weight="bold">FP</text>
+      </svg>
+    </div>
+    <nav>
+      <a href="#products">Produits</a>
+      <a href="#contact">Contact</a>
+      <button class="cart-toggle" onclick="toggleCart()">🛒</button>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>Bienvenue chez Flowshop</h1>
+    <p>Votre boutique moderne pour un peu de tout, au bon prix.</p>
+  </section>
+
+  <section class="products" id="products">
+    <div class="category">
+      <h2>Maison</h2>
+      <div class="grid">
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Maison">
+          <h3>Lampe Design</h3>
+          <p>29,99 €</p>
+          <button onclick="addToCart('Lampe Design', 29.99)">Ajouter</button>
+        </div>
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Maison">
+          <h3>Plante déco</h3>
+          <p>15,00 €</p>
+          <button onclick="addToCart('Plante déco', 15.00)">Ajouter</button>
+        </div>
+      </div>
+    </div>
+    <div class="category">
+      <h2>Tech</h2>
+      <div class="grid">
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Tech">
+          <h3>Casque Bluetooth</h3>
+          <p>59,99 €</p>
+          <button onclick="addToCart('Casque Bluetooth', 59.99)">Ajouter</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cart" id="cart">
+    <h2>Votre Panier</h2>
+    <div id="cart-items"></div>
+    <p><strong>Total : <span id="cart-total">0.00 €</span></strong></p>
+    <div id="paypal-button-container"></div>
+  </div>
+
+  <footer class="footer" id="contact">
+    <p>Flowshop © 2025 – Tous droits réservés</p>
+    <p>Contact : contact@flowshop.fr</p>
+  </footer>
+
+  <script>
+    const cart = [];
+    function toggleCart() {
+      document.getElementById('cart').classList.toggle('open');
+    }
+    function addToCart(name, price) {
+      cart.push({ name, price });
+      renderCart();
+    }
+    function renderCart() {
+      const container = document.getElementById('cart-items');
+      const total = document.getElementById('cart-total');
+      container.innerHTML = '';
+      let sum = 0;
+      cart.forEach(item => {
+        sum += item.price;
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `<span>${item.name}</span><span>${item.price.toFixed(2)} €</span>`;
+        container.appendChild(div);
+      });
+      total.textContent = sum.toFixed(2) + ' €';
+    }
+    function renderPayPalButton() {
+      if (typeof paypal !== 'undefined') {
+        paypal.Buttons({
+          createOrder: function(data, actions) {
+            let total = cart.reduce((acc, item) => acc + item.price, 0);
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  value: total.toFixed(2),
+                  currency_code: 'EUR'
+                }
+              }]
+            });
+          },
+          onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+              alert('Paiement effectué par ' + details.payer.name.given_name);
+              cart.length = 0;
+              renderCart();
+            });
+          }
+        }).render('#paypal-button-container');
+      }
+    }
+  </script>
+
+  <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=EUR" onload="renderPayPalButton()"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flowshop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #000; color: #fff; }
+    header { background: #111; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(255,255,255,0.1); }
+    .logo svg { height: 40px; }
+    nav a { margin-left: 1.5rem; text-decoration: none; color: #fff; font-weight: 600; }
+    .hero { padding: 4rem 2rem; text-align: center; background: #1a1a1a; }
+    .hero h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    .hero p { font-size: 1.2rem; }
+    .products { padding: 3rem 2rem; }
+    .category { margin-bottom: 2rem; }
+    .category h2 { margin-bottom: 1rem; font-size: 1.5rem; color: #ff4444; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+    .product { background: #222; padding: 0.5rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: space-between; height: 100%; position: relative; }
+    .product img { width: 100%; height: 130px; object-fit: cover; border-radius: 10px; }
+    .product h3 { font-size: 1rem; margin: 0.5rem 0 0.25rem 0; text-align: left; }
+    .product p { font-size: 0.95rem; text-align: right; margin: 0 0 0.5rem 0; }
+    .product button { margin-top: auto; padding: 0.4rem 0.8rem; background: #ff4444; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+    .cart { position: fixed; right: 0; top: 0; width: 300px; height: 100vh; background: #111; box-shadow: -2px 0 6px rgba(255,255,255,0.1); transform: translateX(100%); transition: transform 0.3s ease; padding: 1rem; overflow-y: auto; z-index: 1000; color: #fff; }
+    .cart.open { transform: translateX(0); }
+    .cart h2 { margin-bottom: 1rem; }
+    .cart-item { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+    .footer { padding: 2rem; text-align: center; background: #111; color: #fff; margin-top: 4rem; }
+    .cart-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #fff; }
+    #paypal-button-container { margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,10 90,85 10,85" fill="red" />
+        <text x="50" y="60" text-anchor="middle" fill="grey" font-size="30" font-weight="bold">FP</text>
+      </svg>
+    </div>
+    <nav>
+      <a href="#products">Produits</a>
+      <a href="#contact">Contact</a>
+      <button class="cart-toggle" onclick="toggleCart()">🛒</button>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>Bienvenue chez Flowshop</h1>
+    <p>Votre boutique moderne pour un peu de tout, au bon prix.</p>
+  </section>
+
+  <section class="products" id="products">
+    <div class="category">
+      <h2>Maison</h2>
+      <div class="grid">
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Maison">
+          <h3>Lampe Design</h3>
+          <p>29,99 €</p>
+          <button onclick="addToCart('Lampe Design', 29.99)">Ajouter</button>
+        </div>
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Maison">
+          <h3>Plante déco</h3>
+          <p>15,00 €</p>
+          <button onclick="addToCart('Plante déco', 15.00)">Ajouter</button>
+        </div>
+      </div>
+    </div>
+    <div class="category">
+      <h2>Tech</h2>
+      <div class="grid">
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Tech">
+          <h3>Casque Bluetooth</h3>
+          <p>59,99 €</p>
+          <button onclick="addToCart('Casque Bluetooth', 59.99)">Ajouter</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cart" id="cart">
+    <h2>Votre Panier</h2>
+    <div id="cart-items"></div>
+    <p><strong>Total : <span id="cart-total">0.00 €</span></strong></p>
+    <div id="paypal-button-container"></div>
+  </div>
+
+  <footer class="footer" id="contact">
+    <p>Flowshop © 2025 – Tous droits réservés</p>
+    <p>Contact : contact@flowshop.fr</p>
+  </footer>
+
+  <script>
+    const cart = [];
+    function toggleCart() {
+      document.getElementById('cart').classList.toggle('open');
+    }
+    function addToCart(name, price) {
+      cart.push({ name, price });
+      renderCart();
+    }
+    function renderCart() {
+      const container = document.getElementById('cart-items');
+      const total = document.getElementById('cart-total');
+      container.innerHTML = '';
+      let sum = 0;
+      cart.forEach(item => {
+        sum += item.price;
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `<span>${item.name}</span><span>${item.price.toFixed(2)} €</span>`;
+        container.appendChild(div);
+      });
+      total.textContent = sum.toFixed(2) + ' €';
+    }
+    function renderPayPalButton() {
+      if (typeof paypal !== 'undefined') {
+        paypal.Buttons({
+          createOrder: function(data, actions) {
+            let total = cart.reduce((acc, item) => acc + item.price, 0);
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  value: total.toFixed(2),
+                  currency_code: 'EUR'
+                }
+              }]
+            });
+          },
+          onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+              alert('Paiement effectué par ' + details.payer.name.given_name);
+              cart.length = 0;
+              renderCart();
+            });
+          }
+        }).render('#paypal-button-container');
+      }
+    }
+  </script>
+
+  <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=EUR" onload="renderPayPalButton()"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flowshop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #000; color: #fff; }
+    header { background: #111; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(255,255,255,0.1); }
+    .logo svg { height: 40px; }
+    nav a { margin-left: 1.5rem; text-decoration: none; color: #fff; font-weight: 600; }
+    .hero { padding: 4rem 2rem; text-align: center; background: #1a1a1a; }
+    .hero h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    .hero p { font-size: 1.2rem; }
+    .products { padding: 3rem 2rem; }
+    .category { margin-bottom: 2rem; }
+    .category h2 { margin-bottom: 1rem; font-size: 1.5rem; color: #ff4444; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+    .product { background: #222; padding: 0.5rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: space-between; height: 100%; position: relative; }
+    .product img { width: 100%; height: 130px; object-fit: cover; border-radius: 10px; }
+    .product h3 { font-size: 1rem; margin: 0.5rem 0 0.25rem 0; text-align: left; }
+    .product p { font-size: 0.95rem; text-align: right; margin: 0 0 0.5rem 0; }
+    .product button { margin-top: auto; padding: 0.4rem 0.8rem; background: #ff4444; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+    .cart { position: fixed; right: 0; top: 0; width: 300px; height: 100vh; background: #111; box-shadow: -2px 0 6px rgba(255,255,255,0.1); transform: translateX(100%); transition: transform 0.3s ease; padding: 1rem; overflow-y: auto; z-index: 1000; color: #fff; }
+    .cart.open { transform: translateX(0); }
+    .cart h2 { margin-bottom: 1rem; }
+    .cart-item { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+    .footer { padding: 2rem; text-align: center; background: #111; color: #fff; margin-top: 4rem; }
+    .cart-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #fff; }
+    #paypal-button-container { margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,10 90,85 10,85" fill="red" />
+        <text x="50" y="60" text-anchor="middle" fill="grey" font-size="30" font-weight="bold">FP</text>
+      </svg>
+    </div>
+    <nav>
+      <a href="#products">Produits</a>
+      <a href="#contact">Contact</a>
+      <button class="cart-toggle" onclick="toggleCart()">🛒</button>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>Bienvenue chez Flowshop</h1>
+    <p>Votre boutique moderne pour un peu de tout, au bon prix.</p>
+  </section>
+
+  <section class="products" id="products">
+    <div class="category">
+      <h2>Maison</h2>
+      <div class="grid">
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Maison">
+          <h3>Lampe Design</h3>
+          <p>29,99 €</p>
+          <button onclick="addToCart('Lampe Design', 29.99)">Ajouter</button>
+        </div>
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Maison">
+          <h3>Plante déco</h3>
+          <p>15,00 €</p>
+          <button onclick="addToCart('Plante déco', 15.00)">Ajouter</button>
+        </div>
+      </div>
+    </div>
+    <div class="category">
+      <h2>Tech</h2>
+      <div class="grid">
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Tech">
+          <h3>Casque Bluetooth</h3>
+          <p>59,99 €</p>
+          <button onclick="addToCart('Casque Bluetooth', 59.99)">Ajouter</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cart" id="cart">
+    <h2>Votre Panier</h2>
+    <div id="cart-items"></div>
+    <p><strong>Total : <span id="cart-total">0.00 €</span></strong></p>
+    <div id="paypal-button-container"></div>
+  </div>
+
+  <footer class="footer" id="contact">
+    <p>Flowshop © 2025 – Tous droits réservés</p>
+    <p>Contact : contact@flowshop.fr</p>
+  </footer>
+
+  <script>
+    const cart = [];
+    function toggleCart() {
+      document.getElementById('cart').classList.toggle('open');
+    }
+    function addToCart(name, price) {
+      cart.push({ name, price });
+      renderCart();
+    }
+    function renderCart() {
+      const container = document.getElementById('cart-items');
+      const total = document.getElementById('cart-total');
+      container.innerHTML = '';
+      let sum = 0;
+      cart.forEach(item => {
+        sum += item.price;
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `<span>${item.name}</span><span>${item.price.toFixed(2)} €</span>`;
+        container.appendChild(div);
+      });
+      total.textContent = sum.toFixed(2) + ' €';
+    }
+    function renderPayPalButton() {
+      if (typeof paypal !== 'undefined') {
+        paypal.Buttons({
+          createOrder: function(data, actions) {
+            let total = cart.reduce((acc, item) => acc + item.price, 0);
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  value: total.toFixed(2),
+                  currency_code: 'EUR'
+                }
+              }]
+            });
+          },
+          onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+              alert('Paiement effectué par ' + details.payer.name.given_name);
+              cart.length = 0;
+              renderCart();
+            });
+          }
+        }).render('#paypal-button-container');
+      }
+    }
+  </script>
+
+  <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=EUR" onload="renderPayPalButton()"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flowshop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #000; color: #fff; }
+    header { background: #111; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(255,255,255,0.1); }
+    .logo svg { height: 40px; }
+    nav a { margin-left: 1.5rem; text-decoration: none; color: #fff; font-weight: 600; }
+    .hero { padding: 4rem 2rem; text-align: center; background: #1a1a1a; }
+    .hero h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    .hero p { font-size: 1.2rem; }
+    .products { padding: 3rem 2rem; }
+    .category { margin-bottom: 2rem; }
+    .category h2 { margin-bottom: 1rem; font-size: 1.5rem; color: #ff4444; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+    .product { background: #222; padding: 0.5rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: space-between; height: 100%; position: relative; }
+    .product img { width: 100%; height: 130px; object-fit: cover; border-radius: 10px; }
+    .product h3 { font-size: 1rem; margin: 0.5rem 0 0.25rem 0; text-align: left; }
+    .product p { font-size: 0.95rem; text-align: right; margin: 0 0 0.5rem 0; }
+    .product button { margin-top: auto; padding: 0.4rem 0.8rem; background: #ff4444; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+    .cart { position: fixed; right: 0; top: 0; width: 300px; height: 100vh; background: #111; box-shadow: -2px 0 6px rgba(255,255,255,0.1); transform: translateX(100%); transition: transform 0.3s ease; padding: 1rem; overflow-y: auto; z-index: 1000; color: #fff; }
+    .cart.open { transform: translateX(0); }
+    .cart h2 { margin-bottom: 1rem; }
+    .cart-item { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+    .footer { padding: 2rem; text-align: center; background: #111; color: #fff; margin-top: 4rem; }
+    .cart-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #fff; }
+    #paypal-button-container { margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,10 90,85 10,85" fill="red" />
+        <text x="50" y="60" text-anchor="middle" fill="grey" font-size="30" font-weight="bold">FP</text>
+      </svg>
+    </div>
+    <nav>
+      <a href="#products">Produits</a>
+      <a href="#contact">Contact</a>
+      <button class="cart-toggle" onclick="toggleCart()">🛒</button>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>Bienvenue chez Flowshop</h1>
+    <p>Votre boutique moderne pour un peu de tout, au bon prix.</p>
+  </section>
+
+  <section class="products" id="products">
+    <div class="category">
+      <h2>Maison</h2>
+      <div class="grid">
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Maison">
+          <h3>Lampe Design</h3>
+          <p>29,99 €</p>
+          <button onclick="addToCart('Lampe Design', 29.99)">Ajouter</button>
+        </div>
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Maison">
+          <h3>Plante déco</h3>
+          <p>15,00 €</p>
+          <button onclick="addToCart('Plante déco', 15.00)">Ajouter</button>
+        </div>
+      </div>
+    </div>
+    <div class="category">
+      <h2>Tech</h2>
+      <div class="grid">
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Tech">
+          <h3>Casque Bluetooth</h3>
+          <p>59,99 €</p>
+          <button onclick="addToCart('Casque Bluetooth', 59.99)">Ajouter</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cart" id="cart">
+    <h2>Votre Panier</h2>
+    <div id="cart-items"></div>
+    <p><strong>Total : <span id="cart-total">0.00 €</span></strong></p>
+    <div id="paypal-button-container"></div>
+  </div>
+
+  <footer class="footer" id="contact">
+    <p>Flowshop © 2025 – Tous droits réservés</p>
+    <p>Contact : contact@flowshop.fr</p>
+  </footer>
+
+  <script>
+    const cart = [];
+    function toggleCart() {
+      document.getElementById('cart').classList.toggle('open');
+    }
+    function addToCart(name, price) {
+      cart.push({ name, price });
+      renderCart();
+    }
+    function renderCart() {
+      const container = document.getElementById('cart-items');
+      const total = document.getElementById('cart-total');
+      container.innerHTML = '';
+      let sum = 0;
+      cart.forEach(item => {
+        sum += item.price;
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `<span>${item.name}</span><span>${item.price.toFixed(2)} €</span>`;
+        container.appendChild(div);
+      });
+      total.textContent = sum.toFixed(2) + ' €';
+    }
+    function renderPayPalButton() {
+      if (typeof paypal !== 'undefined') {
+        paypal.Buttons({
+          createOrder: function(data, actions) {
+            let total = cart.reduce((acc, item) => acc + item.price, 0);
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  value: total.toFixed(2),
+                  currency_code: 'EUR'
+                }
+              }]
+            });
+          },
+          onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+              alert('Paiement effectué par ' + details.payer.name.given_name);
+              cart.length = 0;
+              renderCart();
+            });
+          }
+        }).render('#paypal-button-container');
+      }
+    }
+  </script>
+
+  <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=EUR" onload="renderPayPalButton()"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flowshop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #000; color: #fff; }
+    header { background: #111; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(255,255,255,0.1); }
+    .logo svg { height: 40px; }
+    nav a { margin-left: 1.5rem; text-decoration: none; color: #fff; font-weight: 600; }
+    .hero { padding: 4rem 2rem; text-align: center; background: #1a1a1a; }
+    .hero h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    .hero p { font-size: 1.2rem; }
+    .products { padding: 3rem 2rem; }
+    .category { margin-bottom: 2rem; }
+    .category h2 { margin-bottom: 1rem; font-size: 1.5rem; color: #ff4444; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+    .product { background: #222; padding: 0.5rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: space-between; height: 100%; position: relative; }
+    .product img { width: 100%; height: 130px; object-fit: cover; border-radius: 10px; }
+    .product h3 { font-size: 1rem; margin: 0.5rem 0 0.25rem 0; text-align: left; }
+    .product p { font-size: 0.95rem; text-align: right; margin: 0 0 0.5rem 0; }
+    .product button { margin-top: auto; padding: 0.4rem 0.8rem; background: #ff4444; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+    .cart { position: fixed; right: 0; top: 0; width: 300px; height: 100vh; background: #111; box-shadow: -2px 0 6px rgba(255,255,255,0.1); transform: translateX(100%); transition: transform 0.3s ease; padding: 1rem; overflow-y: auto; z-index: 1000; color: #fff; }
+    .cart.open { transform: translateX(0); }
+    .cart h2 { margin-bottom: 1rem; }
+    .cart-item { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+    .footer { padding: 2rem; text-align: center; background: #111; color: #fff; margin-top: 4rem; }
+    .cart-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #fff; }
+    #paypal-button-container { margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,10 90,85 10,85" fill="red" />
+        <text x="50" y="60" text-anchor="middle" fill="grey" font-size="30" font-weight="bold">FP</text>
+      </svg>
+    </div>
+    <nav>
+      <a href="#products">Produits</a>
+      <a href="#contact">Contact</a>
+      <button class="cart-toggle" onclick="toggleCart()">🛒</button>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>Bienvenue chez Flowshop</h1>
+    <p>Votre boutique moderne pour un peu de tout, au bon prix.</p>
+  </section>
+
+  <section class="products" id="products">
+    <div class="category">
+      <h2>Maison</h2>
+      <div class="grid">
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Maison">
+          <h3>Lampe Design</h3>
+          <p>29,99 €</p>
+          <button onclick="addToCart('Lampe Design', 29.99)">Ajouter</button>
+        </div>
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Maison">
+          <h3>Plante déco</h3>
+          <p>15,00 €</p>
+          <button onclick="addToCart('Plante déco', 15.00)">Ajouter</button>
+        </div>
+      </div>
+    </div>
+    <div class="category">
+      <h2>Tech</h2>
+      <div class="grid">
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Tech">
+          <h3>Casque Bluetooth</h3>
+          <p>59,99 €</p>
+          <button onclick="addToCart('Casque Bluetooth', 59.99)">Ajouter</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cart" id="cart">
+    <h2>Votre Panier</h2>
+    <div id="cart-items"></div>
+    <p><strong>Total : <span id="cart-total">0.00 €</span></strong></p>
+    <div id="paypal-button-container"></div>
+  </div>
+
+  <footer class="footer" id="contact">
+    <p>Flowshop © 2025 – Tous droits réservés</p>
+    <p>Contact : contact@flowshop.fr</p>
+  </footer>
+
+  <script>
+    const cart = [];
+    function toggleCart() {
+      document.getElementById('cart').classList.toggle('open');
+    }
+    function addToCart(name, price) {
+      cart.push({ name, price });
+      renderCart();
+    }
+    function renderCart() {
+      const container = document.getElementById('cart-items');
+      const total = document.getElementById('cart-total');
+      container.innerHTML = '';
+      let sum = 0;
+      cart.forEach(item => {
+        sum += item.price;
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `<span>${item.name}</span><span>${item.price.toFixed(2)} €</span>`;
+        container.appendChild(div);
+      });
+      total.textContent = sum.toFixed(2) + ' €';
+    }
+    function renderPayPalButton() {
+      if (typeof paypal !== 'undefined') {
+        paypal.Buttons({
+          createOrder: function(data, actions) {
+            let total = cart.reduce((acc, item) => acc + item.price, 0);
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  value: total.toFixed(2),
+                  currency_code: 'EUR'
+                }
+              }]
+            });
+          },
+          onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+              alert('Paiement effectué par ' + details.payer.name.given_name);
+              cart.length = 0;
+              renderCart();
+            });
+          }
+        }).render('#paypal-button-container');
+      }
+    }
+  </script>
+
+  <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=EUR" onload="renderPayPalButton()"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flowshop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #000; color: #fff; }
+    header { background: #111; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(255,255,255,0.1); }
+    .logo svg { height: 40px; }
+    nav a { margin-left: 1.5rem; text-decoration: none; color: #fff; font-weight: 600; }
+    .hero { padding: 4rem 2rem; text-align: center; background: #1a1a1a; }
+    .hero h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    .hero p { font-size: 1.2rem; }
+    .products { padding: 3rem 2rem; }
+    .category { margin-bottom: 2rem; }
+    .category h2 { margin-bottom: 1rem; font-size: 1.5rem; color: #ff4444; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+    .product { background: #222; padding: 0.5rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: space-between; height: 100%; position: relative; }
+    .product img { width: 100%; height: 130px; object-fit: cover; border-radius: 10px; }
+    .product h3 { font-size: 1rem; margin: 0.5rem 0 0.25rem 0; text-align: left; }
+    .product p { font-size: 0.95rem; text-align: right; margin: 0 0 0.5rem 0; }
+    .product button { margin-top: auto; padding: 0.4rem 0.8rem; background: #ff4444; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+    .cart { position: fixed; right: 0; top: 0; width: 300px; height: 100vh; background: #111; box-shadow: -2px 0 6px rgba(255,255,255,0.1); transform: translateX(100%); transition: transform 0.3s ease; padding: 1rem; overflow-y: auto; z-index: 1000; color: #fff; }
+    .cart.open { transform: translateX(0); }
+    .cart h2 { margin-bottom: 1rem; }
+    .cart-item { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+    .footer { padding: 2rem; text-align: center; background: #111; color: #fff; margin-top: 4rem; }
+    .cart-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #fff; }
+    #paypal-button-container { margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,10 90,85 10,85" fill="red" />
+        <text x="50" y="60" text-anchor="middle" fill="grey" font-size="30" font-weight="bold">FP</text>
+      </svg>
+    </div>
+    <nav>
+      <a href="#products">Produits</a>
+      <a href="#contact">Contact</a>
+      <button class="cart-toggle" onclick="toggleCart()">🛒</button>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>Bienvenue chez Flowshop</h1>
+    <p>Votre boutique moderne pour un peu de tout, au bon prix.</p>
+  </section>
+
+  <section class="products" id="products">
+    <div class="category">
+      <h2>Maison</h2>
+      <div class="grid">
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Maison">
+          <h3>Lampe Design</h3>
+          <p>29,99 €</p>
+          <button onclick="addToCart('Lampe Design', 29.99)">Ajouter</button>
+        </div>
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Maison">
+          <h3>Plante déco</h3>
+          <p>15,00 €</p>
+          <button onclick="addToCart('Plante déco', 15.00)">Ajouter</button>
+        </div>
+      </div>
+    </div>
+    <div class="category">
+      <h2>Tech</h2>
+      <div class="grid">
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Tech">
+          <h3>Casque Bluetooth</h3>
+          <p>59,99 €</p>
+          <button onclick="addToCart('Casque Bluetooth', 59.99)">Ajouter</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cart" id="cart">
+    <h2>Votre Panier</h2>
+    <div id="cart-items"></div>
+    <p><strong>Total : <span id="cart-total">0.00 €</span></strong></p>
+    <div id="paypal-button-container"></div>
+  </div>
+
+  <footer class="footer" id="contact">
+    <p>Flowshop © 2025 – Tous droits réservés</p>
+    <p>Contact : contact@flowshop.fr</p>
+  </footer>
+
+  <script>
+    const cart = [];
+    function toggleCart() {
+      document.getElementById('cart').classList.toggle('open');
+    }
+    function addToCart(name, price) {
+      cart.push({ name, price });
+      renderCart();
+    }
+    function renderCart() {
+      const container = document.getElementById('cart-items');
+      const total = document.getElementById('cart-total');
+      container.innerHTML = '';
+      let sum = 0;
+      cart.forEach(item => {
+        sum += item.price;
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `<span>${item.name}</span><span>${item.price.toFixed(2)} €</span>`;
+        container.appendChild(div);
+      });
+      total.textContent = sum.toFixed(2) + ' €';
+    }
+    function renderPayPalButton() {
+      if (typeof paypal !== 'undefined') {
+        paypal.Buttons({
+          createOrder: function(data, actions) {
+            let total = cart.reduce((acc, item) => acc + item.price, 0);
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  value: total.toFixed(2),
+                  currency_code: 'EUR'
+                }
+              }]
+            });
+          },
+          onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+              alert('Paiement effectué par ' + details.payer.name.given_name);
+              cart.length = 0;
+              renderCart();
+            });
+          }
+        }).render('#paypal-button-container');
+      }
+    }
+  </script>
+
+  <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=EUR" onload="renderPayPalButton()"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flowshop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #000; color: #fff; }
+    header { background: #111; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(255,255,255,0.1); }
+    .logo svg { height: 40px; }
+    nav a { margin-left: 1.5rem; text-decoration: none; color: #fff; font-weight: 600; }
+    .hero { padding: 4rem 2rem; text-align: center; background: #1a1a1a; }
+    .hero h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    .hero p { font-size: 1.2rem; }
+    .products { padding: 3rem 2rem; }
+    .category { margin-bottom: 2rem; }
+    .category h2 { margin-bottom: 1rem; font-size: 1.5rem; color: #ff4444; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+    .product { background: #222; padding: 0.5rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: space-between; height: 100%; position: relative; }
+    .product img { width: 100%; height: 130px; object-fit: cover; border-radius: 10px; }
+    .product h3 { font-size: 1rem; margin: 0.5rem 0 0.25rem 0; text-align: left; }
+    .product p { font-size: 0.95rem; text-align: right; margin: 0 0 0.5rem 0; }
+    .product button { margin-top: auto; padding: 0.4rem 0.8rem; background: #ff4444; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+    .cart { position: fixed; right: 0; top: 0; width: 300px; height: 100vh; background: #111; box-shadow: -2px 0 6px rgba(255,255,255,0.1); transform: translateX(100%); transition: transform 0.3s ease; padding: 1rem; overflow-y: auto; z-index: 1000; color: #fff; }
+    .cart.open { transform: translateX(0); }
+    .cart h2 { margin-bottom: 1rem; }
+    .cart-item { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+    .footer { padding: 2rem; text-align: center; background: #111; color: #fff; margin-top: 4rem; }
+    .cart-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #fff; }
+    #paypal-button-container { margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,10 90,85 10,85" fill="red" />
+        <text x="50" y="60" text-anchor="middle" fill="grey" font-size="30" font-weight="bold">FP</text>
+      </svg>
+    </div>
+    <nav>
+      <a href="#products">Produits</a>
+      <a href="#contact">Contact</a>
+      <button class="cart-toggle" onclick="toggleCart()">🛒</button>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>Bienvenue chez Flowshop</h1>
+    <p>Votre boutique moderne pour un peu de tout, au bon prix.</p>
+  </section>
+
+  <section class="products" id="products">
+    <div class="category">
+      <h2>Maison</h2>
+      <div class="grid">
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Maison">
+          <h3>Lampe Design</h3>
+          <p>29,99 €</p>
+          <button onclick="addToCart('Lampe Design', 29.99)">Ajouter</button>
+        </div>
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Maison">
+          <h3>Plante déco</h3>
+          <p>15,00 €</p>
+          <button onclick="addToCart('Plante déco', 15.00)">Ajouter</button>
+        </div>
+      </div>
+    </div>
+    <div class="category">
+      <h2>Tech</h2>
+      <div class="grid">
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Tech">
+          <h3>Casque Bluetooth</h3>
+          <p>59,99 €</p>
+          <button onclick="addToCart('Casque Bluetooth', 59.99)">Ajouter</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cart" id="cart">
+    <h2>Votre Panier</h2>
+    <div id="cart-items"></div>
+    <p><strong>Total : <span id="cart-total">0.00 €</span></strong></p>
+    <div id="paypal-button-container"></div>
+  </div>
+
+  <footer class="footer" id="contact">
+    <p>Flowshop © 2025 – Tous droits réservés</p>
+    <p>Contact : contact@flowshop.fr</p>
+  </footer>
+
+  <script>
+    const cart = [];
+    function toggleCart() {
+      document.getElementById('cart').classList.toggle('open');
+    }
+    function addToCart(name, price) {
+      cart.push({ name, price });
+      renderCart();
+    }
+    function renderCart() {
+      const container = document.getElementById('cart-items');
+      const total = document.getElementById('cart-total');
+      container.innerHTML = '';
+      let sum = 0;
+      cart.forEach(item => {
+        sum += item.price;
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `<span>${item.name}</span><span>${item.price.toFixed(2)} €</span>`;
+        container.appendChild(div);
+      });
+      total.textContent = sum.toFixed(2) + ' €';
+    }
+    function renderPayPalButton() {
+      if (typeof paypal !== 'undefined') {
+        paypal.Buttons({
+          createOrder: function(data, actions) {
+            let total = cart.reduce((acc, item) => acc + item.price, 0);
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  value: total.toFixed(2),
+                  currency_code: 'EUR'
+                }
+              }]
+            });
+          },
+          onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+              alert('Paiement effectué par ' + details.payer.name.given_name);
+              cart.length = 0;
+              renderCart();
+            });
+          }
+        }).render('#paypal-button-container');
+      }
+    }
+  </script>
+
+  <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=EUR" onload="renderPayPalButton()"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flowshop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #000; color: #fff; }
+    header { background: #111; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(255,255,255,0.1); }
+    .logo svg { height: 40px; }
+    nav a { margin-left: 1.5rem; text-decoration: none; color: #fff; font-weight: 600; }
+    .hero { padding: 4rem 2rem; text-align: center; background: #1a1a1a; }
+    .hero h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    .hero p { font-size: 1.2rem; }
+    .products { padding: 3rem 2rem; }
+    .category { margin-bottom: 2rem; }
+    .category h2 { margin-bottom: 1rem; font-size: 1.5rem; color: #ff4444; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+    .product { background: #222; padding: 0.5rem; border-radius: 12px; box-shadow: 0 1px 3px rgba(255,255,255,0.1); display: flex; flex-direction: column; justify-content: space-between; height: 100%; position: relative; }
+    .product img { width: 100%; height: 130px; object-fit: cover; border-radius: 10px; }
+    .product h3 { font-size: 1rem; margin: 0.5rem 0 0.25rem 0; text-align: left; }
+    .product p { font-size: 0.95rem; text-align: right; margin: 0 0 0.5rem 0; }
+    .product button { margin-top: auto; padding: 0.4rem 0.8rem; background: #ff4444; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
+    .cart { position: fixed; right: 0; top: 0; width: 300px; height: 100vh; background: #111; box-shadow: -2px 0 6px rgba(255,255,255,0.1); transform: translateX(100%); transition: transform 0.3s ease; padding: 1rem; overflow-y: auto; z-index: 1000; color: #fff; }
+    .cart.open { transform: translateX(0); }
+    .cart h2 { margin-bottom: 1rem; }
+    .cart-item { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+    .footer { padding: 2rem; text-align: center; background: #111; color: #fff; margin-top: 4rem; }
+    .cart-toggle { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #fff; }
+    #paypal-button-container { margin-top: 1.5rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,10 90,85 10,85" fill="red" />
+        <text x="50" y="60" text-anchor="middle" fill="grey" font-size="30" font-weight="bold">FP</text>
+      </svg>
+    </div>
+    <nav>
+      <a href="#products">Produits</a>
+      <a href="#contact">Contact</a>
+      <button class="cart-toggle" onclick="toggleCart()">🛒</button>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>Bienvenue chez Flowshop</h1>
+    <p>Votre boutique moderne pour un peu de tout, au bon prix.</p>
+  </section>
+
+  <section class="products" id="products">
+    <div class="category">
+      <h2>Maison</h2>
+      <div class="grid">
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Maison">
+          <h3>Lampe Design</h3>
+          <p>29,99 €</p>
+          <button onclick="addToCart('Lampe Design', 29.99)">Ajouter</button>
+        </div>
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Maison">
+          <h3>Plante déco</h3>
+          <p>15,00 €</p>
+          <button onclick="addToCart('Plante déco', 15.00)">Ajouter</button>
+        </div>
+      </div>
+    </div>
+    <div class="category">
+      <h2>Tech</h2>
+      <div class="grid">
+        <div class="product">
+          <img src="https://via.placeholder.com/200" alt="Produit Tech">
+          <h3>Casque Bluetooth</h3>
+          <p>59,99 €</p>
+          <button onclick="addToCart('Casque Bluetooth', 59.99)">Ajouter</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="cart" id="cart">
+    <h2>Votre Panier</h2>
+    <div id="cart-items"></div>
+    <p><strong>Total : <span id="cart-total">0.00 €</span></strong></p>
+    <div id="paypal-button-container"></div>
+  </div>
+
+  <footer class="footer" id="contact">
+    <p>Flowshop © 2025 – Tous droits réservés</p>
+    <p>Contact : contact@flowshop.fr</p>
+  </footer>
+
+  <script>
+    const cart = [];
+    function toggleCart() {
+      document.getElementById('cart').classList.toggle('open');
+    }
+    function addToCart(name, price) {
+      cart.push({ name, price });
+      renderCart();
+    }
+    function renderCart() {
+      const container = document.getElementById('cart-items');
+      const total = document.getElementById('cart-total');
+      container.innerHTML = '';
+      let sum = 0;
+      cart.forEach(item => {
+        sum += item.price;
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `<span>${item.name}</span><span>${item.price.toFixed(2)} €</span>`;
+        container.appendChild(div);
+      });
+      total.textContent = sum.toFixed(2) + ' €';
+    }
+    function renderPayPalButton() {
+      if (typeof paypal !== 'undefined') {
+        paypal.Buttons({
+          createOrder: function(data, actions) {
+            let total = cart.reduce((acc, item) => acc + item.price, 0);
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  value: total.toFixed(2),
+                  currency_code: 'EUR'
+                }
+              }]
+            });
+          },
+          onApprove: function(data, actions) {
+            return actions.order.capture().then(function(details) {
+              alert('Paiement effectué par ' + details.payer.name.given_name);
+              cart.length = 0;
+              renderCart();
+            });
+          }
+        }).render('#paypal-button-container');
+      }
+    }
+  </script>
+
+  <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=EUR" onload="renderPayPalButton()"></script>
+</body>
+</html>
+vvvvv
